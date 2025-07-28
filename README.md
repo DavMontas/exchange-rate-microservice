@@ -37,7 +37,7 @@ cmd/server/main.go # Entry point del servidor
   go test -cover ./internal/exchangerate/service
   ```
 
-***🐳 Usando Docker***
+# 🐳 Usando Docker
 1. `Construye La imagen`
   ```bash
   docker build -t exchange-offers:latest .
