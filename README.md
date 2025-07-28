@@ -15,13 +15,15 @@ transport/ # HTTP API (Gin)
 
 2. **Ejecuta el servidor**  
   ```bash
-  go run cmd/server/main.go```
+  go run cmd/server/main.go
+  ```
 
 3. **Haz una prueba** 
   ```bash
   curl -X POST http://localhost:8080/best-quote \
   -H "Content-Type: application/json" \
-  -d '{"from":"USD","to":"EUR","amount":100}'```
+  -d '{"from":"USD","to":"EUR","amount":100}'
+  ```
 
 
 **Notes:** 
