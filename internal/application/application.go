@@ -38,10 +38,11 @@ func Load() Config {
 				URL: "http://www.floatrates.com/daily/%s.json",
 			},
 			API2: APIConfig{
-				URL: "https://api.frankfurter.app/latest?from=%s&to=%s",
+				URL: "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml",
 			},
 			API3: APIConfig{
-				URL: "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml",
+				URL: "https://api.frankfurter.app/latest?from=%s&to=%s",
+
 			},
 		},
 		Service: ServiceConfig{

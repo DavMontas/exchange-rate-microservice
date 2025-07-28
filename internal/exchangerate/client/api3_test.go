@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"math"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,44 +10,37 @@ import (
 	"github.com/davmontas/exchange-rate-offers/internal/exchangerate/domain"
 )
 
-func TestAPI3Client_FetchRate_Success_EURtoX(t *testing.T) {
-	xmlResp := `<Cube><Cube><Cube currency="JPY" rate="110.5"/></Cube></Cube>`
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/xml")
-		w.Write([]byte(xmlResp))
-	}))
+func TestAPI3Client_FetchRate_Success(t *testing.T) {
+	resp := map[string]map[string]float64{"rates": {"EUR": 0.75}}
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(resp)
+	})
+	srv := httptest.NewServer(handler)
 	defer srv.Close()
 
-	cli := NewAPI3Client(srv.URL)
-	pair := domain.CurrencyPair{From: "EUR", To: "JPY", Amount: 2}
+	cli := NewAPI3Client(srv.URL + "?from=%s&to=%s")
+	pair := domain.CurrencyPair{From: "USD", To: "EUR", Amount: 300}
 	q := cli.FetchRate(context.Background(), pair)
 
 	if q.Err != nil {
 		t.Fatalf("expected no error, got %v", q.Err)
 	}
-	want := 110.5 * 2
-	if math.Abs(q.Rate-want) > 1e-6 {
-		t.Errorf("expected rate %.2f, got %.2f", want, q.Rate)
+	if q.Rate != 0.75*300 {
+		t.Errorf("expected rate %.2f, got %.2f", 0.75*300, q.Rate)
 	}
 }
 
-func TestAPI3Client_FetchRate_Success_XtoEUR(t *testing.T) {
-	xmlResp := `<Cube><Cube><Cube currency="USD" rate="1.1"/></Cube></Cube>`
+func TestAPI3Client_FetchRate_NotFound(t *testing.T) {
+	empty := map[string]map[string]float64{"rates": {}}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/xml")
-		w.Write([]byte(xmlResp))
+		json.NewEncoder(w).Encode(empty)
 	}))
 	defer srv.Close()
 
-	cli := NewAPI3Client(srv.URL)
-	pair := domain.CurrencyPair{From: "USD", To: "EUR", Amount: 5}
+	cli := NewAPI3Client(srv.URL + "?from=%s&to=%s")
+	pair := domain.CurrencyPair{From: "USD", To: "XXX", Amount: 10}
 	q := cli.FetchRate(context.Background(), pair)
-
-	if q.Err != nil {
-		t.Fatalf("expected no error, got %v", q.Err)
-	}
-	want := (1.0 / 1.1) * 5
-	if math.Abs(q.Rate-want) > 1e-6 {
-		t.Errorf("expected rate %.2f, got %.2f", want, q.Rate)
+	if q.Err == nil {
+		t.Fatal("expected error for missing currency, got none")
 	}
 }
